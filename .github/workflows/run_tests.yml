@@ -1,0 +1,35 @@
+name: Ansible lint
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Run crawler tests
+        uses: skx/github-action-tester@master
+        with:
+          script: .github/crawler_tests.sh
+
+      - name: Archive crawler report
+        uses: actions/upload-artifact@v2
+        with:
+          name: crawler_report
+          path: output/test/crawler_report.txt
+
+      - name: Run ui tests
+        uses: skx/github-action-tester@master
+        with:
+          script: .github/ui_tests.sh
+
+      - name: Archive ui report
+        uses: actions/upload-artifact@v2
+        with:
+          name: crawler_report
+          path: output/test/ui_report.txt
