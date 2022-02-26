@@ -23,6 +23,6 @@ resource "yandex_compute_instance" "crawler" {
     nat       = true
   }
   metadata = {
-    ssh-keys = "ubuntu:${file(var.public_key_path)}"
+    ssh-keys = "ubuntu:${var.public_key}"
   }
 }

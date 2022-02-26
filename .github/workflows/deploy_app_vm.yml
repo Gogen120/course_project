@@ -1,0 +1,32 @@
+name: Deploy app on vm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.12.8
+
+      - name: Fill YC service account key.json file
+        run: 'echo "${{secrets.YC_SERVICE_ACCOUNT_KEY}}" | base64 -d > key.json'
+
+      - name: Fill YC terraform tfvars file
+        run: 'echo "${{secrets.YC_TFVARS}}" | base64 -d > terraform.tfvars'
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+      - name: Terraform Apply
+        run: terraform apply --auto-approve
+
+      - name: Run ansible playbooks
+        run: ansible-playbook playbooks/site.yml
+        working-directory: ansible

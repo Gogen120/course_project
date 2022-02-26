@@ -1,33 +1,38 @@
 name: Build docker images
 
 on:
-  push:
-    branches:
-      - 'main'
+  workflow_dispatch:
+
 
 jobs:
   docker:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Login to DockerHub
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p '${{ secrets.DOCKERHUB_TOKEN }}'
+
       - name: Build and push crawler
         run: |
           docker build -t gogen120/crawler:latest .
           docker push gogen120/crawler:latest
         working-directory: search_engine_crawler
+
       - name: Build and push crawler ui
         run: |
           docker build -t gogen120/crawler-ui:latest .
           docker push gogen120/crawler-ui:latest
         working-directory: search_engine_ui
+
       - name: Build and push prometheus crawler
         run: |
           docker build -t gogen120/prometheus-crawler:latest .
           docker push gogen120/prometheus-crawler:latest
         working-directory: monitoring/prometheus
+
       - name: Build and push fluentd
         run: |
           docker build -t gogen120/fluentd-crawler:latest .
