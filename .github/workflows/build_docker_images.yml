@@ -33,15 +33,3 @@ jobs:
           docker build -t gogen120/fluentd-crawler:latest .
           docker push gogen120/fluentd-crawler:latest
         working-directory: logging/fluentd
-      # - name: Build and push prometheus crawler
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: monitoring/prometheus
-      #     push: true
-      #     tags: gogen120/prometheus-crawler:latest
-      # - name: Build and push prometheus crawler
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: logging/fluentd
-      #     push: true
-      #     tags: gogen120/fluentd-crawler:latest
