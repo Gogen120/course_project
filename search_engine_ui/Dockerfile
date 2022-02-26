@@ -10,4 +10,6 @@ ENV MONGO_PORT 27017
 
 WORKDIR /app/ui
 
+EXPOSE 8000
+
 ENTRYPOINT FLASK_APP=ui.py gunicorn ui:app -b 0.0.0.0
