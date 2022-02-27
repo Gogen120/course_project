@@ -15,18 +15,41 @@ jobs:
         with:
           terraform_version: 0.12.8
 
-      - name: Fill YC service account key.json file
-        run: 'echo "${{secrets.YC_SERVICE_ACCOUNT_KEY}}" | base64 -d > key.json'
+      - name: Fill YC service account key.json file for terraform
+        env:
+          YC_SERVICE_ACCOUNT_KEY: ${{ secrets.YC_SERVICE_ACCOUNT_KEY }}
+        run: 'echo "$YC_SERVICE_ACCOUNT_KEY" | base64 -d > key.json'
+        working-directory: terraform
 
-      - name: Fill YC terraform tfvars file
-        run: 'echo "${{secrets.YC_TFVARS}}" | base64 -d > terraform.tfvars'
+      - name: Fill terraform tfvars file
+        env:
+          YC_TFVARS: ${{ secrets.YC_TFVARS }}
+        run: 'echo "$YC_TFVARS" | base64 -d > terraform.tfvars'
+        working-directory: terraform
 
       - name: Terraform Init
         run: terraform init -backend=false
+        working-directory: terraform
 
       - name: Terraform Apply
         run: terraform apply --auto-approve
+        working-directory: terraform
+
+      - name: Install requirements
+        run: pip3 install -r requirements.txt
+        working-directory: ansible
+
+      - name: Fill YC service account key.json file for ansible
+        env:
+          YC_SERVICE_ACCOUNT_KEY: ${{ secrets.YC_SERVICE_ACCOUNT_KEY }}
+        run: 'echo "$YC_SERVICE_ACCOUNT_KEY" | base64 -d > key.json'
+        working-directory: ansible
 
       - name: Run ansible playbooks
-        run: ansible-playbook playbooks/site.yml
-        working-directory: ansible
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: playbooks/site.yml
+          directory: ansible
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          options: |
+            --inventory dynamic_inventory.py
