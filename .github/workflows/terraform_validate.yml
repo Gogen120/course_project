@@ -2,7 +2,6 @@ name: Terraform validate and tflint
 
 on:
   pull_request:
-  push:
 
 jobs:
   terraform:
