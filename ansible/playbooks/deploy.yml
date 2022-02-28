@@ -1,4 +1,4 @@
-- name: DEploy apps
+- name: Deploy apps
   hosts: all
   become: true
   tasks:
