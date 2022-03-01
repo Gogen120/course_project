@@ -1,4 +1,4 @@
-name: Deploy app on vm
+name: Deploy app k8s
 
 on:
   workflow_dispatch:
@@ -9,6 +9,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Install YC CLI
+        run: |
+          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo "~/yandex-cloud/bin" >> $GITHUB_PATH
+          source ~/.bashrc
+
+      - name: Configure yc
+        env:
+          YC_CLOUD_ID: "{{ secrets.YC_CLOUD_ID }}"
+          YC_FOLDER_ID: "{{ secrets.YC_FOLDER_ID }}"
+          YC_TOKEN: "{{ secrets.YC_TOKEN }}"
+        run: |
+          yc config set cloud-id "$YC_CLOUD_ID"
+          yc config set folder-id "$YC_FOLDER_ID"
+          yc config set token "$YC_TOKEN"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -34,20 +50,6 @@ jobs:
       - name: Terraform Apply
         run: terraform apply --auto-approve
         working-directory: terraform_k8s
-
-      - name: Install YC CLI
-        run: |
-          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-
-      - name: Configure yc
-        env:
-          YC_CLOUD_ID: "{{ secrets.YC_CLOUD_ID }}"
-          YC_FOLDER_ID: "{{ secrets.YC_FOLDER_ID }}"
-          YC_TOKEN: "{{ secrets.YC_TOKEN }}"
-        run: |
-          yc config set cloud-id $YC_CLOUD_ID
-          yc config set folder-id $YC_FOLDER_ID
-          yc config set token $YC_TOKEN
 
       - name: Update k8s config
         run: yc managed-kubernetes cluster get-credentials crawler --external --force
