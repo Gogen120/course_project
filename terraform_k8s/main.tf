@@ -34,8 +34,7 @@ resource "yandex_kubernetes_node_group" "node_groups" {
     platform_id = "standard-v2"
     nat         = true
     metadata = {
-      ssh-keys = "ubuntu:${file(var.public_key_path)}"
-
+      ssh-keys = "ubuntu:${var.public_key}"
     }
 
     resources {

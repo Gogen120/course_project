@@ -1,0 +1,60 @@
+name: Deploy app on vm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.12.8
+
+      - name: Fill YC service account key.json file for terraform
+        env:
+          YC_SERVICE_ACCOUNT_KEY: ${{ secrets.YC_SERVICE_ACCOUNT_KEY }}
+        run: 'echo "$YC_SERVICE_ACCOUNT_KEY" | base64 -d > key.json'
+        working-directory: terraform_k8s
+
+      - name: Fill terraform tfvars file
+        env:
+          YC_TFVARS_K8S: ${{ secrets.YC_TFVARS_K8S }}
+        run: 'echo "$YC_TFVARS_K8S" | base64 -d > terraform.tfvars'
+        working-directory: terraform_k8s
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+        working-directory: terraform_k8s
+
+      - name: Terraform Apply
+        run: terraform apply --auto-approve
+        working-directory: terraform_k8s
+
+      - name: Install YC CLI
+        run: |
+          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+
+      - name: Configure yc
+        env:
+          YC_CLOUD_ID: "{{ secrets.YC_CLOUD_ID }}"
+          YC_FOLDER_ID: "{{ secrets.YC_FOLDER_ID }}"
+          YC_TOKEN: "{{ secrets.YC_TOKEN }}"
+        run: |
+          yc config set cloud-id $YC_CLOUD_ID
+          yc config set folder-id $YC_FOLDER_ID
+          yc config set token $YC_TOKEN
+
+      - name: Update k8s config
+        run: yc managed-kubernetes cluster get-credentials crawler --external --force
+
+      - name: Install ingress
+        run: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.34.1/deploy/static/provider/cloud/deploy.yaml
+
+      - name: Deploy app
+        run: kubectl apply -f app/
+        working-directory: kubernetes
